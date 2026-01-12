@@ -222,6 +222,63 @@ def delete_expense(expense_id):
     
     return redirect(url_for('view_expenses'))
 
+# Add these routes after the expenses routes
+
+# SERVICES ROUTES
+@app.route("/services", methods=['GET'])
+def view_services():
+    conn = db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM services ORDER BY category, service_name')
+    services = cursor.fetchall()
+    conn.close()
+    
+    return render_template("services.html", services=services)
+
+@app.route("/services/add", methods=['POST'])
+def add_service():
+    service_name = request.form.get('service_name')
+    phone_number = request.form.get('phone_number')
+    category = request.form.get('category')
+    notes = request.form.get('notes')
+    
+    conn = db_connection()
+    conn.execute('''
+        INSERT INTO services (service_name, phone_number, category, notes)
+        VALUES (?, ?, ?, ?)
+    ''', (service_name, phone_number, category, notes))
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for('view_services'))
+
+@app.route("/services/edit/<int:service_id>", methods=['POST'])
+def edit_service(service_id):
+    service_name = request.form.get('service_name')
+    phone_number = request.form.get('phone_number')
+    category = request.form.get('category')
+    notes = request.form.get('notes')
+    
+    conn = db_connection()
+    conn.execute('''
+        UPDATE services
+        SET service_name = ?, phone_number = ?, category = ?, notes = ?
+        WHERE service_id = ?
+    ''', (service_name, phone_number, category, notes, service_id))
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for('view_services'))
+
+@app.route("/services/delete/<int:service_id>", methods=['POST'])
+def delete_service(service_id):
+    conn = db_connection()
+    conn.execute('DELETE FROM services WHERE service_id = ?', (service_id,))
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for('view_services'))    
+
 # NOTIFY WATCHMAN ROUTES - TELEGRAM VERSION
 @app.route("/notify")
 def notify_watchman():
@@ -259,6 +316,9 @@ def send_notification():
     except Exception as e:
         error_message = f"Failed to send notification: {str(e)}"
         return render_template("notify_watchman.html", error=error_message)
+
+
+                
 
 if __name__ == "__main__":
     app.run(debug=True)
