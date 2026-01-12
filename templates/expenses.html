@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses - Apartment Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-button">← Back to Home</a>
+        
+        <div class="page-header">
+            <h1>Expense Tracker</h1>
+            <p class="subtitle">Track and manage apartment expenses</p>
+        </div>
+        
+        <!-- Summary Section -->
+        {% set total_expenses = expenses|sum(attribute='amount') %}
+        {% set expense_count = expenses|length %}
+        
+        <div class="summary-cards-grid">
+            <div class="summary-card-mini danger">
+                <div class="card-icon">💸</div>
+                <div class="card-content">
+                    <p class="card-label">Total Expenses</p>
+                    <p class="card-number">{{ expense_count }}</p>
+                    <p class="card-amount">₹{{ total_expenses }}</p>
+                </div>
+            </div>
+            
+            <div class="summary-card-mini info">
+                <div class="card-icon">📊</div>
+                <div class="card-content">
+                    <p class="card-label">Months Tracked</p>
+                    <p class="card-number">{{ monthly_totals|length }}</p>
+                    <p class="card-amount">Avg: ₹{{ (total_expenses / monthly_totals|length)|round|int if monthly_totals|length > 0 else 0 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Expense Form (Inline) -->
+        <div class="inline-form-container">
+            <div class="inline-form-header" onclick="toggleAddForm()">
+                <h3>➕ Add New Expense</h3>
+                <span class="toggle-icon" id="addFormToggle">▼</span>
+            </div>
+            <div class="inline-form-content" id="addFormContent" style="display: none;">
+                <form method="POST" action="/expenses/add" class="inline-expense-form">
+                    <div class="inline-form-row">
+                        <div class="inline-form-group">
+                            <label for="add_month">📅 Month</label>
+                            <input type="month" id="add_month" name="month" class="form-input-inline" required>
+                        </div>
+                        
+                        <div class="inline-form-group">
+                            <label for="add_category">🏷️ Category</label>
+                            <select id="add_category" name="category" class="form-input-inline" required>
+                                <option value="">Select Category</option>
+                                <option value="Electricity">Electricity</option>
+                                <option value="Water">Water</option>
+                                <option value="Cleaning">Cleaning</option>
+                                <option value="Repair">Repair</option>
+                                <option value="Security">Security</option>
+                                <option value="Gardening">Gardening</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="inline-form-group">
+                            <label for="add_amount">💰 Amount (₹)</label>
+                            <input type="number" id="add_amount" name="amount" class="form-input-inline" min="0" step="1" required>
+                        </div>
+                        
+                        <div class="inline-form-group">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="btn-submit-inline">Add Expense</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Filter Section -->
+        <div class="filter-section-styled">
+            <form method="GET" action="/expenses" class="filter-form-inline">
+                <div class="filter-input-group">
+                    <label for="month">
+                        <span class="filter-icon">📅</span>
+                        Filter by Month
+                    </label>
+                    <select name="month" id="month" class="styled-select">
+                        <option value="">All Months</option>
+                        {% for month in months %}
+                        <option value="{{ month['month'] }}" {% if request.args.get('month') == month['month'] %}selected{% endif %}>
+                            {{ month['month'] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-buttons-group">
+                    <button type="submit" class="btn-apply">
+                        <span>🔍</span> Apply Filter
+                    </button>
+                    <a href="/expenses" class="btn-clear">
+                        <span>🔄</span> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Monthly Totals -->
+        {% if monthly_totals %}
+        <div class="section-header">
+            <h2>Monthly Summary</h2>
+        </div>
+        
+        <div class="monthly-summary-grid">
+            {% for month_total in monthly_totals %}
+            <div class="month-summary-card">
+                <div class="month-name">{{ month_total['month'] }}</div>
+                <div class="month-amount">₹{{ month_total['total'] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Expenses Table -->
+        {% if expenses %}
+        <div class="section-header">
+            <h2>Expense Details</h2>
+            <span class="record-count">{{ expenses|length }} record(s)</span>
+        </div>
+        
+        <div class="table-wrapper">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Expense ID</th>
+                        <th>Month</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr class="table-row-hover" id="row-{{ expense['expense_id'] }}">
+                        <td data-label="Expense ID">#{{ expense['expense_id'] }}</td>
+                        <td data-label="Month">
+                            <span class="month-tag">{{ expense['month'] }}</span>
+                        </td>
+                        <td data-label="Category">
+                            <span class="category-badge category-{{ expense['category']|lower }}">
+                                {{ expense['category'] }}
+                            </span>
+                        </td>
+                        <td data-label="Amount">
+                            <strong class="amount-text expense-amount">₹{{ expense['amount'] }}</strong>
+                        </td>
+                        <td data-label="Actions">
+                            <div class="action-buttons">
+                                <button onclick="toggleEditForm({{ expense['expense_id'] }}, '{{ expense['month'] }}', '{{ expense['category'] }}', {{ expense['amount'] }})" class="btn-edit">
+                                    <span>✏️</span> Edit
+                                </button>
+                                <form method="POST" action="/expenses/delete/{{ expense['expense_id'] }}" style="display: inline;">
+                                    <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this expense?\n\nCategory: {{ expense['category'] }}\nAmount: ₹{{ expense['amount'] }}')">
+                                        <span>🗑️</span> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Edit Form Row (Hidden by default) -->
+                    <tr class="edit-form-row" id="edit-row-{{ expense['expense_id'] }}" style="display: none;">
+                        <td colspan="5">
+                            <div class="inline-edit-form">
+                                <h4>Edit Expense #{{ expense['expense_id'] }}</h4>
+                                <form method="POST" action="/expenses/edit/{{ expense['expense_id'] }}" class="inline-expense-form">
+                                    <div class="inline-form-row">
+                                        <div class="inline-form-group">
+                                            <label>📅 Month</label>
+                                            <input type="month" name="month" class="form-input-inline" value="{{ expense['month'] }}" required>
+                                        </div>
+                                        
+                                        <div class="inline-form-group">
+                                            <label>🏷️ Category</label>
+                                            <select name="category" class="form-input-inline" required>
+                                                <option value="Electricity" {% if expense['category'] == 'Electricity' %}selected{% endif %}>Electricity</option>
+                                                <option value="Water" {% if expense['category'] == 'Water' %}selected{% endif %}>Water</option>
+                                                <option value="Cleaning" {% if expense['category'] == 'Cleaning' %}selected{% endif %}>Cleaning</option>
+                                                <option value="Repair" {% if expense['category'] == 'Repair' %}selected{% endif %}>Repair</option>
+                                                <option value="Security" {% if expense['category'] == 'Security' %}selected{% endif %}>Security</option>
+                                                <option value="Gardening" {% if expense['category'] == 'Gardening' %}selected{% endif %}>Gardening</option>
+                                                <option value="Maintenance" {% if expense['category'] == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                                                <option value="Other" {% if expense['category'] == 'Other' %}selected{% endif %}>Other</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="inline-form-group">
+                                            <label>💰 Amount (₹)</label>
+                                            <input type="number" name="amount" class="form-input-inline" value="{{ expense['amount'] }}" min="0" step="1" required>
+                                        </div>
+                                        
+                                        <div class="inline-form-group inline-form-buttons">
+                                            <button type="submit" class="btn-submit-inline">Update</button>
+                                            <button type="button" onclick="toggleEditForm({{ expense['expense_id'] }})" class="btn-cancel-inline">Cancel</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h2>No Expenses Found</h2>
+            <p>No expense records match your current filters.</p>
+            <button onclick="toggleAddForm()" class="btn-apply">Add First Expense</button>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        function toggleAddForm() {
+            const content = document.getElementById('addFormContent');
+            const toggle = document.getElementById('addFormToggle');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggle.textContent = '▲';
+            } else {
+                content.style.display = 'none';
+                toggle.textContent = '▼';
+            }
+        }
+        
+        function toggleEditForm(expenseId) {
+            const editRow = document.getElementById('edit-row-' + expenseId);
+            if (editRow.style.display === 'none') {
+                // Hide all other edit forms first
+                document.querySelectorAll('.edit-form-row').forEach(row => {
+                    row.style.display = 'none';
+                });
+                editRow.style.display = 'table-row';
+            } else {
+                editRow.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

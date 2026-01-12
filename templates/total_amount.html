@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Amount - Apartment Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/maintenance" class="back-button">← Back to Maintenance</a>
+
+        <div class="page-header">
+                     <h1>Total Amount Collection</h1>
+                    <p class="subtitle">Collection of the amount</p>
+                </div>
+      
+        
+        {% if recent_month %}
+        <div class="summary-container">
+            <h2>Month: {{ recent_month }}</h2>
+            
+            <div class="summary-cards">
+                <div class="summary-card collected">
+                    <h3>Total Collected</h3>
+                    <p class="amount">₹{{ total_collected }}</p>
+                    <span class="label">Paid Payments</span>
+                </div>
+                
+                <div class="summary-card pending">
+                    <h3>Total Pending</h3>
+                    <p class="amount">₹{{ total_due }}</p>
+                    <span class="label">Due Payments</span>
+                </div>
+                
+                <div class="summary-card total">
+                    <h3>Grand Total</h3>
+                    <p class="amount">₹{{ grand_total }}</p>
+                    <span class="label">Expected Amount</span>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <h3>Collection Progress</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ (total_collected / grand_total * 100) if grand_total > 0 else 0 }}%">
+                        {{ "%.1f"|format((total_collected / grand_total * 100) if grand_total > 0 else 0) }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h2>Payment Details for {{ recent_month }}</h2>
+        
+        <div class="table-info">
+            <p>Showing {{ flats|length }} payment(s)</p>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    {% for column in flats[0].keys() %}
+                    <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in flats %}
+                <tr>
+                    {% for key in row.keys() %}
+                        {% if key == 'status' %}
+                            <td>
+                                {% if row[key] == 'PAID' %}
+                                    <span class="status-paid">{{ row[key] }}</span>
+                                {% else %}
+                                    <span class="status-due">{{ row[key] }}</span>
+                                {% endif %}
+                            </td>
+                        {% elif key == 'amount' %}
+                            <td>₹{{ row[key] }}</td>
+                        {% else %}
+                            <td>{{ row[key] }}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% else %}
+        <p class="no-data-message">No payment data available.</p>
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

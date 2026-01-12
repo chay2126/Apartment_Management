@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Payments - Apartment Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/maintenance" class="back-button">← Back to Maintenance</a>
+        
+        <div class="page-header">
+            <h1>All Payments</h1>
+            <p class="subtitle">View and manage all payment records</p>
+        </div>
+        
+        <!-- Summary Cards -->
+        {% set paid_count = flats|selectattr('status', 'equalto', 'PAID')|list|length %}
+        {% set due_count = flats|selectattr('status', 'equalto', 'DUE')|list|length %}
+        {% set total_amount = flats|sum(attribute='amount') %}
+        {% set paid_amount = flats|selectattr('status', 'equalto', 'PAID')|sum(attribute='amount') %}
+        {% set due_amount = flats|selectattr('status', 'equalto', 'DUE')|sum(attribute='amount') %}
+        
+        <div class="summary-cards-grid">
+            <div class="summary-card-mini success">
+                <div class="card-icon">✓</div>
+                <div class="card-content">
+                    <p class="card-label">Paid Payments</p>
+                    <p class="card-number">{{ paid_count }}</p>
+                    <p class="card-amount">₹{{ paid_amount }}</p>
+                </div>
+            </div>
+            
+            <div class="summary-card-mini warning">
+                <div class="card-icon">⚠</div>
+                <div class="card-content">
+                    <p class="card-label">Due Payments</p>
+                    <p class="card-number">{{ due_count }}</p>
+                    <p class="card-amount">₹{{ due_amount }}</p>
+                </div>
+            </div>
+            
+            <div class="summary-card-mini info">
+                <div class="card-icon">📊</div>
+                <div class="card-content">
+                    <p class="card-label">Total Records</p>
+                    <p class="card-number">{{ flats|length }}</p>
+                    <p class="card-amount">₹{{ total_amount }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters Section -->
+        <div class="filter-section-styled">
+            <form method="GET" action="/view/flats" class="filter-form-inline">
+                <div class="filter-input-group">
+                    <label for="month">
+                        <span class="filter-icon">📅</span>
+                        Filter by Month
+                    </label>
+                    <select name="month" id="month" class="styled-select">
+                        <option value="">All Months</option>
+                        {% for month in months %}
+                        <option value="{{ month['month'] }}" {% if request.args.get('month') == month['month'] %}selected{% endif %}>
+                            {{ month['month'] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-input-group">
+                    <label for="status">
+                        <span class="filter-icon">🏷️</span>
+                        Filter by Status
+                    </label>
+                    <select name="status" id="status" class="styled-select">
+                        <option value="">All Status</option>
+                        <option value="PAID" {% if request.args.get('status') == 'PAID' %}selected{% endif %}>PAID</option>
+                        <option value="DUE" {% if request.args.get('status') == 'DUE' %}selected{% endif %}>DUE</option>
+                    </select>
+                </div>
+                
+                <div class="filter-buttons-group">
+                    <button type="submit" class="btn-apply">
+                        <span>🔍</span> Apply Filters
+                    </button>
+                    <a href="/view/flats" class="btn-clear">
+                        <span>🔄</span> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        {% if flats %}
+        <div class="section-header">
+            <h2>Payment Details</h2>
+            <span class="record-count">{{ flats|length }} record(s)</span>
+        </div>
+        
+        <div class="table-wrapper">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Payment ID</th>
+                        <th>Flat ID</th>
+                        <th>Month</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Payment Mode</th>
+                        <th>Transaction ID</th>
+                        <th>Paid Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in flats %}
+                    <tr class="table-row-hover">
+                        <td data-label="Payment ID">#{{ row['payment_id'] }}</td>
+                        <td data-label="Flat ID">
+                            <span class="flat-badge">Flat {{ row['flat_id'] }}</span>
+                        </td>
+                        <td data-label="Month">
+                            <span class="month-tag">{{ row['month'] }}</span>
+                        </td>
+                        <td data-label="Amount">
+                            <strong class="amount-text">₹{{ row['amount'] }}</strong>
+                        </td>
+                        <td data-label="Status">
+                            {% if row['status'] == 'PAID' %}
+                                <span class="status-badge status-paid-badge">
+                                    <span class="badge-icon">✓</span> PAID
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-due-badge">
+                                    <span class="badge-icon">⚠️</span> DUE
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Payment Mode">
+                            {% if row['payment_mode'] %}
+                                <span class="payment-mode-badge">{{ row['payment_mode'] }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Transaction ID">
+                            {% if row['transaction_id'] %}
+                                <code class="transaction-code">{{ row['transaction_id'] }}</code>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Paid Date">
+                            {% if row['paid_date'] %}
+                                <span class="date-text">{{ row['paid_date'] }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h2>No Payments Found</h2>
+            <p>No payment records match your current filters.</p>
+            <a href="/view/flats" class="btn-apply">Clear Filters</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

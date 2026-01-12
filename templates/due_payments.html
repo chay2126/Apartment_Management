@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Due Payments - Apartment Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/maintenance" class="back-button">← Back to Maintenance</a>
+        
+        <div class="page-header">
+            <h1>Due Payments</h1>
+            <p class="subtitle">Manage and track pending payments</p>
+        </div>
+        
+        {% if flats is defined %}
+        <!-- Summary Cards -->
+        {% set due_count = flats|length %}
+        {% set total_due_amount = flats|sum(attribute='amount') if flats else 0 %}
+        
+        <div class="summary-cards-small">
+            <div class="summary-card-small warning">
+                <div class="card-icon">⚠️</div>
+                <div class="card-content">
+                    <h3>Pending Payments</h3>
+                    <p class="card-number">{{ due_count }}</p>
+                </div>
+            </div>
+            
+            <div class="summary-card-small danger">
+                <div class="card-icon">💰</div>
+                <div class="card-content">
+                    <h3>Total Due Amount</h3>
+                    <p class="card-number">₹{{ total_due_amount }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filter Section -->
+        <div class="filter-section-styled">
+            <form method="GET" action="/due/payments" class="filter-form-inline">
+                <div class="filter-input-group">
+                    <label for="month">
+                        <span class="filter-icon">📅</span>
+                        Filter by Month
+                    </label>
+                    <select name="month" id="month" class="styled-select">
+                        <option value="">All Months</option>
+                        {% for month in months %}
+                        <option value="{{ month['month'] }}" {% if request.args.get('month') == month['month'] %}selected{% endif %}>
+                            {{ month['month'] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-buttons-group">
+                    <button type="submit" class="btn-apply">
+                        <span>🔍</span> Apply Filter
+                    </button>
+                    <a href="/due/payments" class="btn-clear">
+                        <span>🔄</span> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        {% if flats %}
+        <div class="section-header">
+            <h2>Payment Details - DUE Status</h2>
+            <span class="record-count">{{ flats|length }} due payment(s)</span>
+        </div>
+        
+        <div class="table-wrapper">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Payment ID</th>
+                        <th>Flat ID</th>
+                        <th>Month</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Payment Mode</th>
+                        <th>Transaction ID</th>
+                        <th>Paid Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in flats %}
+                    <tr class="table-row-hover">
+                        <td data-label="Payment ID">{{ row['payment_id'] }}</td>
+                        <td data-label="Flat ID"><strong>{{ row['flat_id'] }}</strong></td>
+                        <td data-label="Month">{{ row['month'] }}</td>
+                        <td data-label="Amount"><strong>₹{{ row['amount'] }}</strong></td>
+                        <td data-label="Status">
+                            <span class="status-badge status-due-badge">
+                                <span class="badge-icon">⚠️</span> DUE
+                            </span>
+                        </td>
+                        <td data-label="Payment Mode">{{ row['payment_mode'] or '—' }}</td>
+                        <td data-label="Transaction ID">{{ row['transaction_id'] or '—' }}</td>
+                        <td data-label="Paid Date">{{ row['paid_date'] or '—' }}</td>
+                        <td data-label="Action">
+                            <form method="POST" action="/mark/paid/{{ row['payment_id'] }}" style="display: inline;">
+                                <button type="submit" class="btn-mark-paid" onclick="return confirm('Mark this payment as PAID with Cash?\n\nFlat: {{ row['flat_id'] }}\nMonth: {{ row['month'] }}\nAmount: ₹{{ row['amount'] }}')">
+                                    <span class="btn-icon">✓</span> Mark as PAID
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="success-message">
+            <div class="success-icon">🎉</div>
+            <h2>All Caught Up!</h2>
+            <p>No due payments found. All payments are up to date.</p>
+        </div>
+        {% endif %}
+        
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance - Apartment Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-button">← Back to Home</a>
+        
+        <h1>Maintenance Page</h1>
+        
+        <div class="button-container">
+            <a href="/view/flats" class="button">View All Payments</a>
+            <a href="/due/payments" class="button due-button">Due Payments</a>
+            <a href="/total/amount" class="button total-button">Total Amount</a>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
