@@ -7,14 +7,97 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="home-container">
-        <h1>Apartment Management</h1>
-        <p>Welcome to the Apartment Management System</p>
+    <div class="home-page">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <div class="hero-icon">🏢</div>
+                <h1 class="hero-title">Apartment Management</h1>
+                <p class="hero-subtitle">Your Complete Solution for Apartment Administration</p>
+            </div>
+        </div>
         
-        <div class="home-buttons">
-            <a href="/maintenance" class="button">Maintenance</a>
-            <a href="/expenses" class="button expense-home-button">Expenses</a>
-            <a href="/notify" class="button notify-home-button">Notify Watchman</a>
+        <!-- Main Content -->
+        <div class="home-content">
+            <div class="welcome-card">
+                <h2>Welcome Back! 👋</h2>
+                <p>Manage your apartment with ease using our comprehensive tools</p>
+            </div>
+            
+            <!-- Feature Cards Grid -->
+            <div class="feature-grid">
+                <!-- Maintenance Card -->
+                <a href="/maintenance" class="feature-card maintenance-card">
+                    <div class="feature-card-icon">💰</div>
+                    <div class="feature-card-content">
+                        <h3>Maintenance</h3>
+                        <p>Track payments, view dues, and manage collections</p>
+                    </div>
+                    <div class="feature-card-arrow">→</div>
+                </a>
+                
+                <!-- Expenses Card -->
+                <a href="/expenses" class="feature-card expenses-card">
+                    <div class="feature-card-icon">📊</div>
+                    <div class="feature-card-content">
+                        <h3>Expenses</h3>
+                        <p>Monitor apartment expenses and monthly budgets</p>
+                    </div>
+                    <div class="feature-card-arrow">→</div>
+                </a>
+                
+                <!-- Notify Watchman Card -->
+                <a href="/notify" class="feature-card notify-card">
+                    <div class="feature-card-icon">📱</div>
+                    <div class="feature-card-content">
+                        <h3>Notify Watchman</h3>
+                        <p>Send instant notifications to apartment watchman</p>
+                    </div>
+                    <div class="feature-card-arrow">→</div>
+                </a>
+                
+                <!-- Services Card -->
+                <a href="/services" class="feature-card services-card">
+                    <div class="feature-card-icon">🔧</div>
+                    <div class="feature-card-content">
+                        <h3>Services</h3>
+                        <p>Quick access to all service provider contacts</p>
+                    </div>
+                    <div class="feature-card-arrow">→</div>
+                </a>
+            </div>
+            
+            <!-- Quick Stats Section -->
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-content">
+                        <h4>Quick Access</h4>
+                        <p>All features at your fingertips</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-content">
+                        <h4>Real-time Updates</h4>
+                        <p>Live data synchronization</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🔒</div>
+                    <div class="stat-content">
+                        <h4>Secure & Reliable</h4>
+                        <p>Your data is safe with us</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="home-footer">
+            <p>© 2025 Apartment Management System. Built with ❤️</p>
         </div>
     </div>
     
