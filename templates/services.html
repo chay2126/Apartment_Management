@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services - Apartment Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-button">← Back to Home</a>
+        
+        <div class="page-header">
+            <h1>Service Directory</h1>
+            <p class="subtitle">Quick access to service providers</p>
+        </div>
+        
+        <!-- Add Service Form (Collapsible) -->
+        <div class="inline-form-container">
+            <div class="inline-form-header" onclick="toggleAddServiceForm()">
+                <h3>➕ Add New Service</h3>
+                <span class="toggle-icon" id="addServiceFormToggle">▼</span>
+            </div>
+            <div class="inline-form-content" id="addServiceFormContent" style="display: none;">
+                <form method="POST" action="/services/add" class="service-form">
+                    <div class="service-form-grid">
+                        <div class="form-group">
+                            <label for="add_service_name">👤 Service Name</label>
+                            <input type="text" id="add_service_name" name="service_name" 
+                                   class="form-input-inline" placeholder="e.g., Plumber - Kumar" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="add_phone_number">📞 Phone Number</label>
+                            <input type="tel" id="add_phone_number" name="phone_number" 
+                                   class="form-input-inline" placeholder="+919876543210" 
+                                   pattern="[+]?[0-9]{10,15}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="add_category">🏷️ Category</label>
+                            <select id="add_category" name="category" class="form-input-inline">
+                                <option value="Cleaning">Cleaning</option>
+                                <option value="Plumbing">Plumbing</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Carpentry">Carpentry</option>
+                                <option value="Painting">Painting</option>
+                                <option value="Security">Security</option>
+                                <option value="Gardening">Gardening</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="add_notes">📝 Notes</label>
+                            <input type="text" id="add_notes" name="notes" 
+                                   class="form-input-inline" placeholder="e.g., Available 24/7">
+                        </div>
+                    </div>
+                    
+                    <div class="form-buttons-inline">
+                        <button type="submit" class="btn-submit-inline">Add Service</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Services Grid -->
+        {% if services %}
+        <div class="section-header">
+            <h2>Available Services</h2>
+            <span class="record-count">{{ services|length }} service(s)</span>
+        </div>
+        
+        <div class="services-grid">
+            {% for service in services %}
+            <div class="service-card" id="card-{{ service['service_id'] }}">
+                <div class="service-card-header">
+                    <div class="service-icon">
+                        {% if service['category'] == 'Cleaning' %}🧹
+                        {% elif service['category'] == 'Plumbing' %}🔧
+                        {% elif service['category'] == 'Electrical' %}⚡
+                        {% elif service['category'] == 'Carpentry' %}🪚
+                        {% elif service['category'] == 'Painting' %}🎨
+                        {% elif service['category'] == 'Security' %}🛡️
+                        {% elif service['category'] == 'Gardening' %}🌱
+                        {% else %}🔨
+                        {% endif %}
+                    </div>
+                    <span class="service-category-badge">{{ service['category'] }}</span>
+                </div>
+                
+                <div class="service-card-body">
+                    <h3 class="service-name">{{ service['service_name'] }}</h3>
+                    
+                    <div class="service-phone">
+                        <span class="phone-icon">📞</span>
+                        <a href="tel:{{ service['phone_number'] }}" class="phone-link">
+                            {{ service['phone_number'] }}
+                        </a>
+                    </div>
+                    
+                    {% if service['notes'] %}
+                    <p class="service-notes">{{ service['notes'] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="service-card-actions">
+                    <button onclick="toggleEditServiceForm({{ service['service_id'] }}, '{{ service['service_name'] }}', '{{ service['phone_number'] }}', '{{ service['category'] }}', '{{ service['notes'] or '' }}')" 
+                            class="btn-edit-service">
+                        ✏️ Edit
+                    </button>
+                    <form method="POST" action="/services/delete/{{ service['service_id'] }}" style="display: inline;">
+                        <button type="submit" class="btn-delete-service" 
+                                onclick="return confirm('Delete {{ service['service_name'] }}?')">
+                            🗑️ Delete
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Edit Form (Hidden) -->
+                <div class="service-edit-form" id="edit-form-{{ service['service_id'] }}" style="display: none;">
+                    <h4>Edit Service</h4>
+                    <form method="POST" action="/services/edit/{{ service['service_id'] }}">
+                        <div class="service-form-grid">
+                            <div class="form-group">
+                                <label>👤 Service Name</label>
+                                <input type="text" name="service_name" class="form-input-inline" 
+                                       value="{{ service['service_name'] }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>📞 Phone Number</label>
+                                <input type="tel" name="phone_number" class="form-input-inline" 
+                                       value="{{ service['phone_number'] }}" pattern="[+]?[0-9]{10,15}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>🏷️ Category</label>
+                                <select name="category" class="form-input-inline">
+                                    <option value="Cleaning" {% if service['category'] == 'Cleaning' %}selected{% endif %}>Cleaning</option>
+                                    <option value="Plumbing" {% if service['category'] == 'Plumbing' %}selected{% endif %}>Plumbing</option>
+                                    <option value="Electrical" {% if service['category'] == 'Electrical' %}selected{% endif %}>Electrical</option>
+                                    <option value="Carpentry" {% if service['category'] == 'Carpentry' %}selected{% endif %}>Carpentry</option>
+                                    <option value="Painting" {% if service['category'] == 'Painting' %}selected{% endif %}>Painting</option>
+                                    <option value="Security" {% if service['category'] == 'Security' %}selected{% endif %}>Security</option>
+                                    <option value="Gardening" {% if service['category'] == 'Gardening' %}selected{% endif %}>Gardening</option>
+                                    <option value="Other" {% if service['category'] == 'Other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>📝 Notes</label>
+                                <input type="text" name="notes" class="form-input-inline" 
+                                       value="{{ service['notes'] or '' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="edit-form-buttons">
+                            <button type="submit" class="btn-submit-inline">Update</button>
+                            <button type="button" onclick="toggleEditServiceForm({{ service['service_id'] }})" 
+                                    class="btn-cancel-inline">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📇</div>
+            <h2>No Services Added Yet</h2>
+            <p>Add your first service provider to get started.</p>
+            <button onclick="toggleAddServiceForm()" class="btn-apply">Add First Service</button>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        function toggleAddServiceForm() {
+            const content = document.getElementById('addServiceFormContent');
+            const toggle = document.getElementById('addServiceFormToggle');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggle.textContent = '▲';
+            } else {
+                content.style.display = 'none';
+                toggle.textContent = '▼';
+            }
+        }
+        
+        function toggleEditServiceForm(serviceId) {
+            const editForm = document.getElementById('edit-form-' + serviceId);
+            const card = document.getElementById('card-' + serviceId);
+            
+            if (editForm.style.display === 'none') {
+                // Hide all other edit forms
+                document.querySelectorAll('.service-edit-form').forEach(form => {
+                    form.style.display = 'none';
+                });
+                document.querySelectorAll('.service-card').forEach(c => {
+                    c.classList.remove('editing');
+                });
+                
+                editForm.style.display = 'block';
+                card.classList.add('editing');
+            } else {
+                editForm.style.display = 'none';
+                card.classList.remove('editing');
+            }
+        }
+    </script>
+</body>
+</html>
