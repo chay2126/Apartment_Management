@@ -1878,3 +1878,427 @@ tr:hover {
         font-size: 24px;
     }
 }
+
+/* ========================================
+   TAB NAVIGATION STYLES
+   ======================================== */
+
+.tab-navigation {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    max-width: 600px;
+    margin: -20px auto 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #667eea;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.tab-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.tab-icon {
+    font-size: 20px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   NOTICE BOARD STYLES
+   ======================================== */
+
+.notices-container {
+    max-width: 100%;
+}
+
+.notices-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.notices-header h2 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 28px;
+}
+
+.btn-add-notice {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-add-notice:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Notice Form */
+.notice-form-container {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.notice-form-container h3 {
+    margin: 0 0 20px 0;
+    color: #667eea;
+    font-size: 22px;
+}
+
+.notice-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* Notices Grid */
+.notices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+}
+
+/* Notice Card */
+.notice-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 5px solid #667eea;
+}
+
+.notice-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.notice-card.priority-urgent {
+    border-left-color: #dc3545;
+    background: linear-gradient(to right, #fff5f5 0%, white 10%);
+}
+
+.notice-card.priority-high {
+    border-left-color: #ff9800;
+    background: linear-gradient(to right, #fff9f0 0%, white 10%);
+}
+
+.notice-card.priority-medium {
+    border-left-color: #2196F3;
+    background: linear-gradient(to right, #f0f8ff 0%, white 10%);
+}
+
+.notice-card.priority-low {
+    border-left-color: #4CAF50;
+    background: linear-gradient(to right, #f0fff0 0%, white 10%);
+}
+
+.notice-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.notice-category {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.notice-category.general {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.notice-category.maintenance {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.notice-category.events {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.notice-category.rules {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.notice-category.utilities {
+    background: #e0f2f1;
+    color: #00796b;
+}
+
+.notice-category.emergency {
+    background: #ffcdd2;
+    color: #b71c1c;
+}
+
+.notice-priority {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.notice-priority.priority-urgent {
+    background: #ffcdd2;
+    color: #b71c1c;
+}
+
+.notice-priority.priority-high {
+    background: #ffe0b2;
+    color: #e65100;
+}
+
+.notice-priority.priority-medium {
+    background: #bbdefb;
+    color: #1565c0;
+}
+
+.notice-priority.priority-low {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.notice-title {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.notice-content {
+    margin: 0 0 15px 0;
+    color: #555;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.notice-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.notice-date {
+    color: #888;
+    font-size: 13px;
+}
+
+.notice-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-edit-notice,
+.btn-delete-notice {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-edit-notice {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    color: white;
+}
+
+.btn-edit-notice:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+.btn-delete-notice {
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+}
+
+.btn-delete-notice:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+}
+
+/* Notice Edit Form */
+.notice-edit-form {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px solid #667eea;
+}
+
+/* Empty State */
+.empty-notices {
+    text-align: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.empty-notices .empty-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+}
+
+.empty-notices h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.empty-notices p {
+    color: #7f8c8d;
+    font-size: 16px;
+}
+
+.loading-text {
+    text-align: center;
+    color: #888;
+    font-size: 18px;
+    padding: 40px;
+}
+
+.error-message {
+    text-align: center;
+    padding: 40px;
+    background: #ffebee;
+    border-radius: 12px;
+    color: #c62828;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tab-navigation {
+        margin: -10px 10px 20px;
+    }
+    
+    .tab-btn {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    .notices-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .btn-add-notice {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .notices-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .notice-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .notice-footer {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .notice-actions {
+        width: 100%;
+    }
+    
+    .btn-edit-notice,
+    .btn-delete-notice {
+        flex: 1;
+    }
+}
