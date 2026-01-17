@@ -9,12 +9,11 @@
 <body>
     <div class="container">
         <a href="/maintenance" class="back-button">← Back to Maintenance</a>
-
+        
         <div class="page-header">
-                     <h1>Total Amount Collection</h1>
-                    <p class="subtitle">Collection of the amount</p>
-                </div>
-      
+            <h1>Total Amount Collection</h1>
+            <p class="subtitle">Collection summary for the recent month</p>
+        </div>
         
         {% if recent_month %}
         <div class="summary-container">
@@ -50,45 +49,83 @@
             </div>
         </div>
         
-        <h2>Payment Details for {{ recent_month }}</h2>
-        
-        <div class="table-info">
-            <p>Showing {{ flats|length }} payment(s)</p>
+        <!-- Payment Details Section -->
+        <div class="section-header">
+            <h2>Payment Details for {{ recent_month }}</h2>
+            <span class="record-count">{{ flats|length }} record(s)</span>
         </div>
         
-        <table>
-            <thead>
-                <tr>
-                    {% for column in flats[0].keys() %}
-                    <th>{{ column }}</th>
+        <div class="table-wrapper">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Flat No</th>
+                        <th>Owner Name</th>
+                        <th>Month</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Payment Mode</th>
+                        <th>Transaction ID</th>
+                        <th>Paid Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for flat in flats %}
+                    <tr>
+                        <td data-label="Flat No">
+                            <span class="flat-badge">{{ flat.flat_no }}</span>
+                        </td>
+                        <td data-label="Owner Name">{{ flat.owner_name }}</td>
+                        <td data-label="Month">
+                            <span class="month-tag">{{ flat.month }}</span>
+                        </td>
+                        <td data-label="Amount">
+                            <strong class="amount-text">₹{{ flat.amount }}</strong>
+                        </td>
+                        <td data-label="Status">
+                            {% if flat.status == 'PAID' %}
+                                <span class="status-badge status-paid-badge">
+                                    <span class="badge-icon">✓</span> PAID
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-due-badge">
+                                    <span class="badge-icon">⚠️</span> DUE
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Payment Mode">
+                            {% if flat.payment_mode %}
+                                <span class="payment-mode-badge">{{ flat.payment_mode }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Transaction ID">
+                            {% if flat.transaction_id %}
+                                <code class="transaction-code">{{ flat.transaction_id }}</code>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Paid Date">
+                            {% if flat.paid_date %}
+                                <span class="date-text">{{ flat.paid_date }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in flats %}
-                <tr>
-                    {% for key in row.keys() %}
-                        {% if key == 'status' %}
-                            <td>
-                                {% if row[key] == 'PAID' %}
-                                    <span class="status-paid">{{ row[key] }}</span>
-                                {% else %}
-                                    <span class="status-due">{{ row[key] }}</span>
-                                {% endif %}
-                            </td>
-                        {% elif key == 'amount' %}
-                            <td>₹{{ row[key] }}</td>
-                        {% else %}
-                            <td>{{ row[key] }}</td>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
         
         {% else %}
-        <p class="no-data-message">No payment data available.</p>
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h2>No Payment Data</h2>
+            <p>No payment records available at this time.</p>
+        </div>
         {% endif %}
     </div>
     
