@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance - Resident Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/resident" class="back-button">← Back to Dashboard</a>
+        
+        <div class="page-header">
+            <h1>Maintenance Payment</h1>
+            <p class="subtitle">Flat {{ user.flat_no }} - {{ user.full_name }}</p>
+        </div>
+        
+        <!-- Payment Options Navigation -->
+        <div class="payment-nav">
+            <button class="payment-nav-btn active" onclick="showPaymentTab('pay')">
+                💳 Pay Now
+            </button>
+            <button class="payment-nav-btn" onclick="showPaymentTab('history')">
+                📜 Payment History
+            </button>
+            <button class="payment-nav-btn" onclick="showPaymentTab('summary')">
+                📊 Summary
+            </button>
+        </div>
+        
+        <!-- Pay Now Tab -->
+        <div id="pay-tab" class="payment-tab-content active">
+            {% if success %}
+            <div class="alert alert-success">
+                <div class="alert-icon">✅</div>
+                <div class="alert-content">
+                    <h3>Payment Submitted Successfully!</h3>
+                    <p>Your payment has been recorded. It will be verified by admin.</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if error %}
+            <div class="alert alert-error">
+                <div class="alert-icon">❌</div>
+                <div class="alert-content">
+                    <h3>Payment Failed</h3>
+                    <p>{{ error }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- UPI Payment Section -->
+            <div class="upi-payment-container">
+                <div class="upi-qr-section">
+                    <h2>Scan QR Code to Pay</h2>
+                    <div class="qr-code-wrapper">
+                        <img src="{{ url_for('static', filename='images/upi_qr.png') }}" 
+                             alt="UPI QR Code" 
+                             class="qr-code-image">
+                    </div>
+                    <div class="upi-details">
+                        <p class="upi-id">
+                            <span class="label">UPI ID:</span>
+                            <strong>9963640627@superyes</strong>
+                        </p>
+                        <p class="payment-instruction">
+                            Scan and pay with any BHIM UPI app
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Payment Form -->
+                <div class="payment-form-section">
+                    <h2>Submit Payment Details</h2>
+                    
+                    {% if due_payments %}
+                    <form method="POST" action="/resident/maintenance/pay" class="payment-form">
+                        <div class="form-group">
+                            <label for="month">
+                                <span class="label-icon">📅</span>
+                                Select Month
+                            </label>
+                            <select id="month" name="month" class="form-input" required onchange="updateAmount()">
+                                <option value="">Choose Month</option>
+                                {% for payment in due_payments %}
+                                <option value="{{ payment.month }}" data-amount="{{ payment.amount }}">
+                                    {{ payment.month }} - ₹{{ payment.amount }} (DUE)
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-help">Select the month you're paying for</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="amount">
+                                <span class="label-icon">💰</span>
+                                Amount (₹)
+                            </label>
+                            <input type="number" 
+                                   id="amount" 
+                                   name="amount" 
+                                   class="form-input" 
+                                   placeholder="Enter amount paid"
+                                   min="0"
+                                   step="1"
+                                   required>
+                            <small class="form-help">Enter the exact amount you paid</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="transaction_id">
+                                <span class="label-icon">🔢</span>
+                                Transaction ID / UTR Number
+                            </label>
+                            <input type="text" 
+                                   id="transaction_id" 
+                                   name="transaction_id" 
+                                   class="form-input" 
+                                   placeholder="e.g., 123456789012"
+                                   required
+                                   pattern="[A-Za-z0-9]+"
+                                   title="Only letters and numbers allowed">
+                            <small class="form-help">Enter the transaction ID from your payment app</small>
+                        </div>
+                        
+                        <div class="payment-info-box">
+                            <h4>📌 Important Instructions:</h4>
+                            <ul>
+                                <li>Scan the QR code using any UPI app</li>
+                                <li>Complete the payment</li>
+                                <li>Copy the Transaction ID / UTR number</li>
+                                <li>Paste it above and submit</li>
+                                <li>Do not use the same Transaction ID twice</li>
+                            </ul>
+                        </div>
+                        
+                        <button type="submit" class="btn-submit-payment">
+                            <span>✓</span> Submit Payment
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="no-due-message">
+                        <div class="success-icon">✅</div>
+                        <h3>All Payments Up to Date!</h3>
+                        <p>You have no pending maintenance payments at this time.</p>
+                        <p class="sub-text">Check back later for future payments.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payment History Tab -->
+        <div id="history-tab" class="payment-tab-content">
+            <div class="section-header">
+                <h2>Your Payment History</h2>
+                <span class="record-count">{{ all_payments|length }} record(s)</span>
+            </div>
+            
+            {% if all_payments %}
+            <div class="table-wrapper">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Payment Mode</th>
+                            <th>Transaction ID</th>
+                            <th>Paid Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in all_payments %}
+                        <tr>
+                            <td data-label="Month">
+                                <span class="month-tag">{{ payment.month }}</span>
+                            </td>
+                            <td data-label="Amount">
+                                <strong class="amount-text">₹{{ payment.amount }}</strong>
+                            </td>
+                            <td data-label="Status">
+                                {% if payment.status == 'PAID' %}
+                                    <span class="status-badge status-paid-badge">
+                                        <span class="badge-icon">✓</span> PAID
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge status-due-badge">
+                                        <span class="badge-icon">⚠️</span> DUE
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Payment Mode">
+                                {% if payment.payment_mode %}
+                                    <span class="payment-mode-badge">{{ payment.payment_mode }}</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Transaction ID">
+                                {% if payment.transaction_id %}
+                                    <code class="transaction-code">{{ payment.transaction_id }}</code>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Paid Date">
+                                {% if payment.paid_date %}
+                                    <span class="date-text">{{ payment.paid_date }}</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h2>No Payment Records</h2>
+                <p>No payment history found for your flat.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Summary Tab -->
+        <div id="summary-tab" class="payment-tab-content">
+            <div class="summary-cards">
+                <div class="summary-card collected">
+                    <h3>Total Paid</h3>
+                    <p class="amount">₹{{ total_paid }}</p>
+                    <span class="label">{{ paid_count }} payment(s)</span>
+                </div>
+                
+                <div class="summary-card pending">
+                    <h3>Total Due</h3>
+                    <p class="amount">₹{{ total_due }}</p>
+                    <span class="label">{{ due_count }} pending</span>
+                </div>
+                
+                <div class="summary-card total">
+                    <h3>Grand Total</h3>
+                    <p class="amount">₹{{ grand_total }}</p>
+                    <span class="label">All time</span>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <h3>Payment Completion Rate</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ completion_rate }}%">
+                        {{ completion_rate }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        function showPaymentTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.payment-tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from all buttons
+            document.querySelectorAll('.payment-nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            if (tabName === 'pay') {
+                document.getElementById('pay-tab').classList.add('active');
+                document.querySelectorAll('.payment-nav-btn')[0].classList.add('active');
+            } else if (tabName === 'history') {
+                document.getElementById('history-tab').classList.add('active');
+                document.querySelectorAll('.payment-nav-btn')[1].classList.add('active');
+            } else if (tabName === 'summary') {
+                document.getElementById('summary-tab').classList.add('active');
+                document.querySelectorAll('.payment-nav-btn')[2].classList.add('active');
+            }
+        }
+        
+        function updateAmount() {
+            const monthSelect = document.getElementById('month');
+            const amountInput = document.getElementById('amount');
+            const selectedOption = monthSelect.options[monthSelect.selectedIndex];
+            
+            if (selectedOption.value) {
+                const amount = selectedOption.getAttribute('data-amount');
+                amountInput.value = amount;
+            } else {
+                amountInput.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
