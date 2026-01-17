@@ -1,4 +1,211 @@
 /* ========================================
+   RESIDENT MAINTENANCE PAYMENT STYLES
+   ======================================== */
+
+/* Payment Navigation */
+.payment-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.payment-nav-btn {
+    background: white;
+    color: #667eea;
+    padding: 12px 24px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-nav-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.payment-nav-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+.payment-tab-content {
+    display: none;
+}
+
+.payment-tab-content.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+/* UPI Payment Container */
+.upi-payment-container {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+/* QR Code Section */
+.upi-qr-section {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.upi-qr-section h2 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+    font-size: 22px;
+}
+
+.qr-code-wrapper {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.qr-code-image {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    display: block;
+}
+
+.upi-details {
+    margin-top: 20px;
+}
+
+.upi-id {
+    font-size: 16px;
+    margin: 10px 0;
+    color: #2c3e50;
+}
+
+.upi-id .label {
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.upi-id strong {
+    color: #667eea;
+    font-size: 18px;
+}
+
+.payment-instruction {
+    color: #7f8c8d;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+/* Payment Form Section */
+.payment-form-section {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.payment-form-section h2 {
+    margin: 0 0 25px 0;
+    color: #2c3e50;
+    font-size: 22px;
+}
+
+.payment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-help {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.payment-info-box {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #ff9800;
+}
+
+.payment-info-box h4 {
+    margin: 0 0 15px 0;
+    color: #e65100;
+    font-size: 16px;
+}
+
+.payment-info-box ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #e65100;
+}
+
+.payment-info-box li {
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.btn-submit-payment {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.btn-submit-payment:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+    .upi-payment-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .payment-nav {
+        flex-direction: column;
+    }
+    
+    .payment-nav-btn {
+        width: 100%;
+    }
+}
+```
+
+---
+
+## **Step 5: Copy QR Code Image**
+
+Make sure to save your uploaded QR code as:
+```
+Project_Apartment/static/images/upi_qr.png
+
+
+/* ========================================
    GENERAL STYLES
    ======================================== */
 
