@@ -78,34 +78,36 @@
                 <thead>
                     <tr>
                         <th>Payment ID</th>
-                        <th>Flat ID</th>
+                        <th>Flat No</th>
+                        <th>Owner Name</th>
                         <th>Month</th>
                         <th>Amount</th>
                         <th>Status</th>
-                        <th>Payment Mode</th>
-                        <th>Transaction ID</th>
-                        <th>Paid Date</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for row in flats %}
+                    {% for payment in flats %}
                     <tr class="table-row-hover">
-                        <td data-label="Payment ID">{{ row['payment_id'] }}</td>
-                        <td data-label="Flat ID"><strong>{{ row['flat_id'] }}</strong></td>
-                        <td data-label="Month">{{ row['month'] }}</td>
-                        <td data-label="Amount"><strong>₹{{ row['amount'] }}</strong></td>
+                        <td data-label="Payment ID">#{{ payment.payment_id }}</td>
+                        <td data-label="Flat No">
+                            <span class="flat-badge">Flat {{ payment.flat_no }}</span>
+                        </td>
+                        <td data-label="Owner Name">{{ payment.owner_name }}</td>
+                        <td data-label="Month">
+                            <span class="month-tag">{{ payment.month }}</span>
+                        </td>
+                        <td data-label="Amount">
+                            <strong class="amount-text">₹{{ payment.amount }}</strong>
+                        </td>
                         <td data-label="Status">
                             <span class="status-badge status-due-badge">
                                 <span class="badge-icon">⚠️</span> DUE
                             </span>
                         </td>
-                        <td data-label="Payment Mode">{{ row['payment_mode'] or '—' }}</td>
-                        <td data-label="Transaction ID">{{ row['transaction_id'] or '—' }}</td>
-                        <td data-label="Paid Date">{{ row['paid_date'] or '—' }}</td>
                         <td data-label="Action">
-                            <form method="POST" action="/mark/paid/{{ row['payment_id'] }}" style="display: inline;">
-                                <button type="submit" class="btn-mark-paid" onclick="return confirm('Mark this payment as PAID with Cash?\n\nFlat: {{ row['flat_id'] }}\nMonth: {{ row['month'] }}\nAmount: ₹{{ row['amount'] }}')">
+                            <form method="POST" action="/mark/paid/{{ payment.payment_id }}" style="display: inline;">
+                                <button type="submit" class="btn-mark-paid">
                                     <span class="btn-icon">✓</span> Mark as PAID
                                 </button>
                             </form>
