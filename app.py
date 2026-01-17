@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import sqlite3
 from datetime import datetime
 import requests
@@ -316,6 +316,74 @@ def send_notification():
     except Exception as e:
         error_message = f"Failed to send notification: {str(e)}"
         return render_template("notify_watchman.html", error=error_message)
+
+
+@app.route("/api/notices", methods=['GET'])
+def get_notices():
+    conn = db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM notices ORDER BY priority DESC, created_date DESC')
+    notices = cursor.fetchall()
+    conn.close()
+    
+    # Convert to list of dicts
+    notices_list = []
+    for notice in notices:
+        notices_list.append({
+            'notice_id': notice['notice_id'],
+            'title': notice['title'],
+            'content': notice['content'],
+            'category': notice['category'],
+            'priority': notice['priority'],
+            'created_date': notice['created_date'],
+            'updated_date': notice['updated_date']
+        })
+    
+    return jsonify(notices_list)
+
+@app.route("/notices/add", methods=['POST'])
+def add_notice():
+    title = request.form.get('title')
+    content = request.form.get('content')
+    category = request.form.get('category')
+    priority = request.form.get('priority')
+    
+    conn = db_connection()
+    conn.execute('''
+        INSERT INTO notices (title, content, category, priority)
+        VALUES (?, ?, ?, ?)
+    ''', (title, content, category, priority))
+    conn.commit()
+    conn.close()
+    
+    return redirect('/?tab=notices')
+
+@app.route("/notices/edit/<int:notice_id>", methods=['POST'])
+def edit_notice(notice_id):
+    title = request.form.get('title')
+    content = request.form.get('content')
+    category = request.form.get('category')
+    priority = request.form.get('priority')
+    
+    conn = db_connection()
+    conn.execute('''
+        UPDATE notices
+        SET title = ?, content = ?, category = ?, priority = ?, updated_date = CURRENT_TIMESTAMP
+        WHERE notice_id = ?
+    ''', (title, content, category, priority, notice_id))
+    conn.commit()
+    conn.close()
+    
+    return redirect('/?tab=notices')
+
+@app.route("/notices/delete/<int:notice_id>", methods=['POST'])
+def delete_notice(notice_id):
+    conn = db_connection()
+    conn.execute('DELETE FROM notices WHERE notice_id = ?', (notice_id,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})        
 
 
                 
