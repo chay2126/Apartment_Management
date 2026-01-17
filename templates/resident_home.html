@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resident Dashboard - Apartment Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="home-page">
+        <!-- Logout Button -->
+        <div class="logout-container">
+            <span class="welcome-text">👋 Welcome, {{ user.full_name }} (Flat {{ user.flat_no }})</span>
+            <a href="/logout" class="btn-logout">
+                <span>🚪</span> Logout
+            </a>
+        </div>
+        
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <div class="hero-icon">🏠</div>
+                <h1 class="hero-title">Resident Portal</h1>
+                <p class="hero-subtitle">Your Apartment Dashboard</p>
+            </div>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="showTab('home')">
+                <span class="tab-icon">🏠</span> Home
+            </button>
+            <button class="tab-btn" onclick="showTab('notices')">
+                <span class="tab-icon">📋</span> Notice Board
+            </button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="home-content">
+            <!-- Home Tab Content -->
+            <div id="home-tab" class="tab-content active">
+                <div class="welcome-card">
+                    <h2>Welcome to Your Portal! 👋</h2>
+                    <p>Access your apartment services and information</p>
+                </div>
+                
+                <!-- Feature Cards Grid -->
+                <div class="feature-grid">
+                    <!-- Maintenance Card -->
+                    <a href="/resident/maintenance" class="feature-card maintenance-card">
+                        <div class="feature-card-icon">💰</div>
+                        <div class="feature-card-content">
+                            <h3>Maintenance</h3>
+                            <p>Pay your maintenance and view payment history</p>
+                        </div>
+                        <div class="feature-card-arrow">→</div>
+                    </a>
+                    
+                    <!-- Expenses Card -->
+                    <a href="/resident/expenses" class="feature-card expenses-card">
+                        <div class="feature-card-icon">📊</div>
+                        <div class="feature-card-content">
+                            <h3>Expenses</h3>
+                            <p>View apartment expenses and monthly budgets</p>
+                        </div>
+                        <div class="feature-card-arrow">→</div>
+                    </a>
+                    
+                    <!-- Notify Watchman Card -->
+                    <a href="/resident/notify" class="feature-card notify-card">
+                        <div class="feature-card-icon">📱</div>
+                        <div class="feature-card-content">
+                            <h3>Notify Watchman</h3>
+                            <p>Send instant notifications to watchman</p>
+                        </div>
+                        <div class="feature-card-arrow">→</div>
+                    </a>
+                    
+                    <!-- Services Card -->
+                    <a href="/resident/services" class="feature-card services-card">
+                        <div class="feature-card-icon">🔧</div>
+                        <div class="feature-card-content">
+                            <h3>Services</h3>
+                            <p>View all service provider contacts</p>
+                        </div>
+                        <div class="feature-card-arrow">→</div>
+                    </a>
+                </div>
+                
+                <!-- Quick Info Section -->
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">🏠</div>
+                        <div class="stat-content">
+                            <h4>Your Flat</h4>
+                            <p>Flat {{ user.flat_no }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📞</div>
+                        <div class="stat-content">
+                            <h4>Contact</h4>
+                            <p>{{ user.phone }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">🔒</div>
+                        <div class="stat-content">
+                            <h4>Secure Access</h4>
+                            <p>Your data is protected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notice Board Tab Content (Read-Only) -->
+            <div id="notices-tab" class="tab-content">
+                <div class="notices-container">
+                    <div class="notices-header">
+                        <h2>📋 Notice Board</h2>
+                    </div>
+                    
+                    <!-- Notices Grid (No Add/Edit/Delete) -->
+                    <div class="notices-grid" id="noticesGrid">
+                        <p class="loading-text">Loading notices...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="home-footer">
+            <p>© 2025 Apartment Management System. Built with ❤️</p>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (tabName === 'home') {
+                document.getElementById('home-tab').classList.add('active');
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            } else if (tabName === 'notices') {
+                document.getElementById('notices-tab').classList.add('active');
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                loadNotices();
+            }
+        }
+        
+        async function loadNotices() {
+            try {
+                const response = await fetch('/api/notices');
+                const notices = await response.json();
+                
+                const noticesGrid = document.getElementById('noticesGrid');
+                
+                if (notices.length === 0) {
+                    noticesGrid.innerHTML = `
+                        <div class="empty-notices">
+                            <div class="empty-icon">📭</div>
+                            <h3>No Notices Posted</h3>
+                            <p>No announcements at this time</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Resident view - No edit/delete buttons
+                noticesGrid.innerHTML = notices.map(notice => `
+                    <div class="notice-card priority-${notice.priority.toLowerCase()}">
+                        <div class="notice-card-header">
+                            <span class="notice-category ${notice.category.toLowerCase()}">${notice.category}</span>
+                            <span class="notice-priority priority-${notice.priority.toLowerCase()}">${notice.priority}</span>
+                        </div>
+                        
+                        <h3 class="notice-title">${notice.title}</h3>
+                        <p class="notice-content">${notice.content}</p>
+                        
+                        <div class="notice-footer">
+                            <span class="notice-date">📅 ${new Date(notice.created_date).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading notices:', error);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('tab') === 'notices') {
+                showTab('notices');
+            }
+        });
+    </script>
+</body>
+</html>
