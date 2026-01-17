@@ -152,18 +152,24 @@ def get_flats_payments():
     
     conn = db_connection()
     
-    query = 'SELECT * FROM payments WHERE 1=1'
+    # JOIN with flats table to get flat_no
+    query = '''
+        SELECT p.*, f.flat_no, f.owner_name 
+        FROM payments p
+        JOIN flats f ON p.flat_id = f.flat_id
+        WHERE 1=1
+    '''
     params = []
     
     if month_filter:
-        query += ' AND month = ?'
+        query += ' AND p.month = ?'
         params.append(month_filter)
     
     if status_filter:
-        query += ' AND status = ?'
+        query += ' AND p.status = ?'
         params.append(status_filter)
     
-    query += ' ORDER BY month DESC, flat_id'
+    query += ' ORDER BY p.month DESC, f.flat_no'
     
     flats = conn.execute(query, params).fetchall()
     
@@ -182,14 +188,20 @@ def get_due_payments():
     
     conn = db_connection()
     
-    query = 'SELECT * FROM payments WHERE status = ?'
+    # JOIN with flats table to get flat_no
+    query = '''
+        SELECT p.*, f.flat_no, f.owner_name 
+        FROM payments p
+        JOIN flats f ON p.flat_id = f.flat_id
+        WHERE p.status = ?
+    '''
     params = ['DUE']
     
     if month_filter:
-        query += ' AND month = ?'
+        query += ' AND p.month = ?'
         params.append(month_filter)
     
-    query += ' ORDER BY month DESC, flat_id'
+    query += ' ORDER BY p.month DESC, f.flat_no'
     
     flats = conn.execute(query, params).fetchall()
     
@@ -216,7 +228,14 @@ def get_total_amount():
     
     recent_month = recent_month_row['month']
     
-    cursor.execute('SELECT * FROM payments WHERE month = ? ORDER BY flat_id', (recent_month,))
+    # JOIN with flats table
+    cursor.execute('''
+        SELECT p.*, f.flat_no, f.owner_name 
+        FROM payments p
+        JOIN flats f ON p.flat_id = f.flat_id
+        WHERE p.month = ? 
+        ORDER BY f.flat_no
+    ''', (recent_month,))
     flats = cursor.fetchall()
     
     cursor.execute('''
@@ -521,7 +540,122 @@ def resident_home():
 @app.route("/resident/maintenance")
 @resident_required
 def resident_maintenance():
-    return "<h1>Resident Maintenance - Coming in Phase 2</h1><a href='/resident'>Back to Home</a>"
+    flat_id = session.get('flat_id')
+    flat_no = session.get('flat_no')
+    
+    # Check for success/error messages
+    success = request.args.get('success')
+    error = request.args.get('error')
+    
+    error_message = None
+    if error == 'duplicate':
+        error_message = "This Transaction ID has already been used. Please use a unique Transaction ID."
+    
+    conn = db_connection()
+    cursor = conn.cursor()
+    
+    # Get ALL payments for this flat (for history)
+    cursor.execute('''
+        SELECT * FROM payments 
+        WHERE flat_id = ? 
+        ORDER BY month DESC
+    ''', (flat_id,))
+    all_payments = cursor.fetchall()
+    
+    # Get ONLY DUE payments for dropdown (actual DUE records from database)
+    cursor.execute('''
+        SELECT * FROM payments 
+        WHERE flat_id = ? AND status = 'DUE'
+        ORDER BY month ASC
+    ''', (flat_id,))
+    due_payments = cursor.fetchall()
+    
+    # Calculate totals
+    cursor.execute('''
+        SELECT 
+            SUM(CASE WHEN status = 'PAID' THEN amount ELSE 0 END) as paid,
+            SUM(CASE WHEN status = 'DUE' THEN amount ELSE 0 END) as due,
+            SUM(amount) as total,
+            SUM(CASE WHEN status = 'PAID' THEN 1 ELSE 0 END) as paid_count,
+            SUM(CASE WHEN status = 'DUE' THEN 1 ELSE 0 END) as due_count
+        FROM payments 
+        WHERE flat_id = ?
+    ''', (flat_id,))
+    
+    totals = cursor.fetchone()
+    conn.close()
+    
+    total_paid = totals['paid'] or 0
+    total_due = totals['due'] or 0
+    grand_total = totals['total'] or 0
+    paid_count = totals['paid_count'] or 0
+    due_count = totals['due_count'] or 0
+    
+    completion_rate = round((total_paid / grand_total * 100) if grand_total > 0 else 0, 1)
+    
+    user_data = {
+        'full_name': session.get('full_name'),
+        'flat_no': session.get('flat_no'),
+        'flat_id': session.get('flat_id')
+    }
+    
+    return render_template("resident_maintenance.html",
+                         user=user_data,
+                         all_payments=all_payments,
+                         due_payments=due_payments,
+                         total_paid=total_paid,
+                         total_due=total_due,
+                         grand_total=grand_total,
+                         paid_count=paid_count,
+                         due_count=due_count,
+                         completion_rate=completion_rate,
+                         success=success,
+                         error=error_message)
+
+@app.route("/resident/maintenance/pay", methods=['POST'])
+@resident_required
+def resident_pay_maintenance():
+    flat_id = session.get('flat_id')
+    flat_no = session.get('flat_no')
+    month = request.form.get('month')
+    amount = request.form.get('amount')
+    transaction_id = request.form.get('transaction_id').strip().upper()
+    
+    conn = db_connection()
+    cursor = conn.cursor()
+    
+    # Check if transaction ID already exists (case-insensitive)
+    cursor.execute('SELECT * FROM payments WHERE UPPER(transaction_id) = ?', (transaction_id,))
+    existing = cursor.fetchone()
+    
+    if existing:
+        conn.close()
+        return redirect(url_for('resident_maintenance') + '?error=duplicate')
+    
+    # Update payment using flat_id (not flat_no)
+    cursor.execute('''
+        UPDATE payments
+        SET status = 'PAID',
+            payment_mode = 'UPI',
+            transaction_id = ?,
+            paid_date = ?,
+            amount = ?
+        WHERE flat_id = ? AND month = ?
+    ''', (transaction_id, datetime.now().strftime('%Y-%m-%d'), amount, flat_id, month))
+    
+    rows_affected = cursor.rowcount
+    
+    # If no rows were updated, it means the record doesn't exist, so insert it
+    if rows_affected == 0:
+        cursor.execute('''
+            INSERT INTO payments (flat_id, month, amount, status, payment_mode, transaction_id, paid_date)
+            VALUES (?, ?, ?, 'PAID', 'UPI', ?, ?)
+        ''', (flat_id, month, amount, transaction_id, datetime.now().strftime('%Y-%m-%d')))
+    
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for('resident_maintenance') + '?success=1')
 
 @app.route("/resident/expenses")
 @resident_required
