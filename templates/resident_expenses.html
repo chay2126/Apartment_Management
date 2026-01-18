@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses - Resident Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/resident" class="back-button">← Back to Dashboard</a>
+        
+        <div class="page-header">
+            <h1>Apartment Expenses</h1>
+            <p class="subtitle">View monthly expenses and budget breakdown</p>
+        </div>
+        
+        <!-- Summary Section -->
+        {% set total_expenses = expenses|sum(attribute='amount') %}
+        {% set expense_count = expenses|length %}
+        
+        <div class="summary-cards-grid">
+            <div class="summary-card-mini danger">
+                <div class="card-icon">💸</div>
+                <div class="card-content">
+                    <p class="card-label">Total Expenses</p>
+                    <p class="card-number">{{ expense_count }}</p>
+                    <p class="card-amount">₹{{ total_expenses }}</p>
+                </div>
+            </div>
+            
+            <div class="summary-card-mini info">
+                <div class="card-icon">📊</div>
+                <div class="card-content">
+                    <p class="card-label">Months Tracked</p>
+                    <p class="card-number">{{ monthly_totals|length }}</p>
+                    <p class="card-amount">Avg: ₹{{ (total_expenses / monthly_totals|length)|round|int if monthly_totals|length > 0 else 0 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filter Section -->
+        <div class="filter-section-styled">
+            <form method="GET" action="/resident/expenses" class="filter-form-inline">
+                <div class="filter-input-group">
+                    <label for="month">
+                        <span class="filter-icon">📅</span>
+                        Filter by Month
+                    </label>
+                    <select name="month" id="month" class="styled-select">
+                        <option value="">All Months</option>
+                        {% for month in months %}
+                        <option value="{{ month['month'] }}" {% if request.args.get('month') == month['month'] %}selected{% endif %}>
+                            {{ month['month'] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-buttons-group">
+                    <button type="submit" class="btn-apply">
+                        <span>🔍</span> Apply Filter
+                    </button>
+                    <a href="/resident/expenses" class="btn-clear">
+                        <span>🔄</span> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Monthly Totals -->
+        {% if monthly_totals %}
+        <div class="section-header">
+            <h2>Monthly Summary</h2>
+        </div>
+        
+        <div class="monthly-summary-grid">
+            {% for month_total in monthly_totals %}
+            <div class="month-summary-card">
+                <div class="month-name">{{ month_total['month'] }}</div>
+                <div class="month-amount">₹{{ month_total['total'] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Expenses Table (Read-Only) -->
+        {% if expenses %}
+        <div class="section-header">
+            <h2>Expense Details</h2>
+            <span class="record-count">{{ expenses|length }} record(s)</span>
+        </div>
+        
+        <div class="table-wrapper">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Expense ID</th>
+                        <th>Month</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr class="table-row-hover">
+                        <td data-label="Expense ID">#{{ expense['expense_id'] }}</td>
+                        <td data-label="Month">
+                            <span class="month-tag">{{ expense['month'] }}</span>
+                        </td>
+                        <td data-label="Category">
+                            <span class="category-badge category-{{ expense['category']|lower }}">
+                                {{ expense['category'] }}
+                            </span>
+                        </td>
+                        <td data-label="Amount">
+                            <strong class="amount-text expense-amount">₹{{ expense['amount'] }}</strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🔭</div>
+            <h2>No Expenses Found</h2>
+            <p>No expense records match your current filters.</p>
+            <a href="/resident/expenses" class="btn-apply">Clear Filters</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
