@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notify Watchman - Resident Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/resident" class="back-button">← Back to Dashboard</a>
+        
+        <div class="page-header">
+            <h1>Notify Watchman</h1>
+            <p class="subtitle">Send instant Telegram notification</p>
+        </div>
+        
+        <!-- Notification Status Messages -->
+        {% if success %}
+        <div class="alert alert-success">
+            <div class="alert-icon">✅</div>
+            <div class="alert-content">
+                <h3>Notification Sent Successfully!</h3>
+                <p>Telegram message has been sent to the watchman from Flat {{ user.flat_no }}.</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if error %}
+        <div class="alert alert-error">
+            <div class="alert-icon">❌</div>
+            <div class="alert-content">
+                <h3>Notification Failed</h3>
+                <p>
+                    {% if error == 'telegram_fail' %}
+                        Failed to send notification. Please check bot configuration or try again.
+                    {% elif error == 'exception' %}
+                        An error occurred while sending the notification. Please try again.
+                    {% else %}
+                        An unexpected error occurred.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Notification Form -->
+        <div class="notify-form-container">
+            <div class="notify-icon-large">📱</div>
+            
+            <form method="POST" action="/resident/notify/send" class="notify-form">
+                <!-- Flat number is auto-filled and hidden -->
+                <div class="form-group">
+                    <label>
+                        <span class="label-icon">🏠</span>
+                        Your Flat Number
+                    </label>
+                    <input type="text" class="form-input" value="Flat {{ user.flat_no }}" disabled>
+                    <small class="form-help">Auto-filled from your profile</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message_type">
+                        <span class="label-icon">📋</span>
+                        Reason
+                    </label>
+                    <select id="message_type" name="message_type" class="form-input" onchange="updateMessage()" required>
+                        <option value="general">General Call</option>
+                        <option value="urgent">Urgent Assistance</option>
+                        <option value="delivery">Delivery/Guest Arrival</option>
+                        <option value="maintenance">Maintenance Issue</option>
+                        <option value="security">Security Concern</option>
+                        <option value="custom">Custom Message</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="custom_message_group" style="display: none;">
+                    <label for="custom_message">
+                        <span class="label-icon">✏️</span>
+                        Custom Message
+                    </label>
+                    <textarea id="custom_message" name="custom_message" class="form-textarea" 
+                              rows="3" placeholder="Enter your custom message..."></textarea>
+                </div>
+                
+                <div class="message-preview">
+                    <h4>📩 Message Preview:</h4>
+                    <div class="preview-box" id="message_preview">
+                        🔔 Alert: Flat {{ user.flat_no }} is calling you. Please visit immediately.
+                    </div>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="submit" class="btn-send-notification">
+                        <span>📤</span> Send Telegram Notification
+                    </button>
+                    <a href="/resident" class="btn-cancel">Cancel</a>
+                </div>
+            </form>
+            
+            <div class="info-note">
+                <strong>Note:</strong> This will send an instant notification to the watchman's Telegram app. 
+                Make sure the watchman has started the bot and Telegram is installed on their phone.
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        const flatNo = "{{ user.flat_no }}";
+        
+        function updateMessage() {
+            const messageType = document.getElementById('message_type').value;
+            const customGroup = document.getElementById('custom_message_group');
+            const preview = document.getElementById('message_preview');
+            
+            const messages = {
+                'general': `🔔 Alert: Flat ${flatNo} is calling you. Please visit immediately.`,
+                'urgent': `🚨 URGENT: Flat ${flatNo} needs immediate assistance. Please rush!`,
+                'delivery': `📦 Delivery Alert: Guest/Delivery at Flat ${flatNo}. Please attend.`,
+                'maintenance': `🔧 Maintenance: Flat ${flatNo} needs maintenance support. Please visit.`,
+                'security': `🚨 Security Alert: Flat ${flatNo} requires security assistance. Please respond immediately.`,
+                'custom': 'Custom message will be sent'
+            };
+            
+            if (messageType === 'custom') {
+                customGroup.style.display = 'block';
+                preview.textContent = 'Your custom message will be sent';
+            } else {
+                customGroup.style.display = 'none';
+                preview.textContent = messages[messageType];
+            }
+        }
+    </script>
+</body>
+</html>
