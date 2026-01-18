@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services - Resident Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/resident" class="back-button">← Back to Dashboard</a>
+        
+        <div class="page-header">
+            <h1>Service Directory</h1>
+            <p class="subtitle">Quick access to service providers</p>
+        </div>
+        
+        <!-- Services Grid -->
+        {% if services %}
+        <div class="section-header">
+            <h2>Available Services</h2>
+            <span class="record-count">{{ services|length }} service(s)</span>
+        </div>
+        
+        <div class="services-grid">
+            {% for service in services %}
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-icon">
+                        {% if service['category'] == 'Cleaning' %}🧹
+                        {% elif service['category'] == 'Plumbing' %}🔧
+                        {% elif service['category'] == 'Electrical' %}⚡
+                        {% elif service['category'] == 'Carpentry' %}🪚
+                        {% elif service['category'] == 'Painting' %}🎨
+                        {% elif service['category'] == 'Security' %}🛡️
+                        {% elif service['category'] == 'Gardening' %}🌱
+                        {% else %}🔨
+                        {% endif %}
+                    </div>
+                    <span class="service-category-badge">{{ service['category'] }}</span>
+                </div>
+                
+                <div class="service-card-body">
+                    <h3 class="service-name">{{ service['service_name'] }}</h3>
+                    
+                    <div class="service-phone">
+                        <span class="phone-icon">📞</span>
+                        <a href="tel:{{ service['phone_number'] }}" class="phone-link">
+                            {{ service['phone_number'] }}
+                        </a>
+                    </div>
+                    
+                    {% if service['notes'] %}
+                    <p class="service-notes">{{ service['notes'] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📇</div>
+            <h2>No Services Available</h2>
+            <p>No service providers have been added yet.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
