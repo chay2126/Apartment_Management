@@ -64,6 +64,46 @@ def resident_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def check_and_create_monthly_payments():
+    """
+    Automatically creates payment records for current month if they don't exist.
+    Creates records for all 25 flats with status='DUE' and amount=1800.
+    Only creates for flats that don't have a record yet.
+    """
+    from datetime import datetime
+    
+    current_month = datetime.now().strftime('%Y-%m')
+    
+    conn = db_connection()
+    cursor = conn.cursor()
+    
+    # Get all flats
+    cursor.execute('SELECT flat_id FROM flats ORDER BY flat_id')
+    all_flats = cursor.fetchall()
+    
+    # Get flats that already have payment record for current month
+    cursor.execute('SELECT flat_id FROM payments WHERE month = ?', (current_month,))
+    existing_flats = cursor.fetchall()
+    existing_flat_ids = [row['flat_id'] for row in existing_flats]
+    
+    # Find flats that don't have current month record
+    payments_to_create = []
+    for flat in all_flats:
+        if flat['flat_id'] not in existing_flat_ids:
+            payments_to_create.append((flat['flat_id'], current_month, 1800, 'DUE'))
+    
+    # Create missing payment records
+    if payments_to_create:
+        cursor.executemany('''
+            INSERT INTO payments (flat_id, month, amount, status)
+            VALUES (?, ?, ?, ?)
+        ''', payments_to_create)
+        
+        conn.commit()
+        print(f"✅ Auto-created {len(payments_to_create)} payment records for {current_month}")
+    
+    conn.close()    
+
 # ========== AUTHENTICATION ROUTES ==========
 
 @app.route("/")
@@ -142,11 +182,13 @@ def index():
 @app.route("/maintenance")
 @admin_required
 def maintenance():
+    check_and_create_monthly_payments()
     return render_template("maintenence.html")
 
 @app.route("/view/flats", methods=["GET"])
 @admin_required
 def get_flats_payments():
+    check_and_create_monthly_payments()
     month_filter = request.args.get("month")
     status_filter = request.args.get("status")
     
@@ -184,6 +226,7 @@ def get_flats_payments():
 @app.route("/due/payments", methods=['GET'])
 @admin_required
 def get_due_payments():
+    check_and_create_monthly_payments()
     month_filter = request.args.get("month")
     
     conn = db_connection()
@@ -216,6 +259,7 @@ def get_due_payments():
 @app.route("/total/amount", methods=['GET'])
 @admin_required
 def get_total_amount():
+    check_and_create_monthly_payments()
     conn = db_connection()
     
     cursor = conn.cursor()
@@ -540,6 +584,7 @@ def resident_home():
 @app.route("/resident/maintenance")
 @resident_required
 def resident_maintenance():
+    check_and_create_monthly_payments()
     flat_id = session.get('flat_id')
     flat_no = session.get('flat_no')
     
