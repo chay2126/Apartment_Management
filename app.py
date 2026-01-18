@@ -705,17 +705,117 @@ def resident_pay_maintenance():
 @app.route("/resident/expenses")
 @resident_required
 def resident_expenses():
-    return "<h1>Resident Expenses - Coming in Phase 3</h1><a href='/resident'>Back to Home</a>"
+    """Resident view of expenses (read-only)"""
+    month_filter = request.args.get("month")
+    
+    conn = db_connection()
+    cursor = conn.cursor()
+    
+    # Get all expenses with optional month filter
+    query = 'SELECT * FROM expenses WHERE 1=1'
+    params = []
+    
+    if month_filter:
+        query += ' AND month = ?'
+        params.append(month_filter)
+    
+    query += ' ORDER BY month DESC, expense_id DESC'
+    
+    expenses = conn.execute(query, params).fetchall()
+    
+    # Get distinct months for filter
+    cursor.execute('SELECT DISTINCT month FROM expenses ORDER BY month DESC')
+    months = cursor.fetchall()
+    
+    # Get monthly totals
+    cursor.execute('''
+        SELECT month, SUM(amount) as total 
+        FROM expenses 
+        GROUP BY month 
+        ORDER BY month DESC
+    ''')
+    monthly_totals = cursor.fetchall()
+    
+    conn.close()
+    
+    user_data = {
+        'full_name': session.get('full_name'),
+        'flat_no': session.get('flat_no')
+    }
+    
+    return render_template("resident_expenses.html", 
+                         user=user_data,
+                         expenses=expenses, 
+                         months=months,
+                         monthly_totals=monthly_totals)
 
 @app.route("/resident/notify")
 @resident_required
 def resident_notify():
-    return "<h1>Resident Notify Watchman - Coming in Phase 4</h1><a href='/resident'>Back to Home</a>"
+    """Resident view to notify watchman"""
+    user_data = {
+        'full_name': session.get('full_name'),
+        'flat_no': session.get('flat_no')
+    }
+    
+    # Check for success/error messages
+    success = request.args.get('success')
+    error = request.args.get('error')
+    
+    return render_template("resident_notify.html", user=user_data, success=success, error=error)
+
+@app.route("/resident/notify/send", methods=['POST'])
+@resident_required
+def resident_notify_send():
+    """Send notification from resident to watchman"""
+    flat_no = session.get('flat_no')  # Auto-filled from session
+    message_type = request.form.get('message_type')
+    custom_message = request.form.get('custom_message', '')
+    
+    # Message templates
+    messages = {
+        'general': f"🔔 <b>Alert</b>\n\nFlat <b>{flat_no}</b> is calling you.\nPlease visit immediately.",
+        'urgent': f"🚨 <b>URGENT</b>\n\nFlat <b>{flat_no}</b> needs immediate assistance.\nPlease rush!",
+        'delivery': f"📦 <b>Delivery Alert</b>\n\nGuest/Delivery at Flat <b>{flat_no}</b>.\nPlease attend.",
+        'maintenance': f"🔧 <b>Maintenance Request</b>\n\nFlat <b>{flat_no}</b> needs maintenance support.\nPlease visit.",
+        'security': f"🚨 <b>Security Alert</b>\n\nFlat <b>{flat_no}</b> requires security assistance.\nPlease respond immediately."
+    }
+    
+    if message_type == 'custom' and custom_message:
+        message = f"📨 <b>Message from Flat {flat_no}</b>\n\n{custom_message}"
+    else:
+        message = messages.get(message_type, messages['general'])
+    
+    try:
+        result = send_telegram_message(message)
+        
+        if result and result.get('ok'):
+            return redirect(url_for('resident_notify') + '?success=1')
+        else:
+            return redirect(url_for('resident_notify') + '?error=telegram_fail')
+    
+    except Exception as e:
+        return redirect(url_for('resident_notify') + '?error=exception')
 
 @app.route("/resident/services")
 @resident_required
 def resident_services():
-    return "<h1>Resident Services - Coming in Phase 5</h1><a href='/resident'>Back to Home</a>"
+    """Resident view of services (read-only)"""
+    conn = db_connection()
+    cursor = conn.cursor()
+    
+    # Get all services
+    cursor.execute('SELECT * FROM services ORDER BY category, service_name')
+    services = cursor.fetchall()
+    
+    conn.close()
+    
+    user_data = {
+        'full_name': session.get('full_name'),
+        'flat_no': session.get('flat_no')
+    }
+    
+    return render_template("resident_services.html", user=user_data, services=services)
 
 if __name__ == "__main__":
     app.run(debug=True)
